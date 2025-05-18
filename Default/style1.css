@@ -1,0 +1,46 @@
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #e3f2fd, #bbdefb);
+}
+
+.label {
+    -fx-text-fill: #0d47a1;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.table-view {
+    -fx-background-color: green;
+    -fx-border-color: #90caf9;
+    -fx-border-radius: 10;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 3);
+}
+
+.table-column {
+    -fx-alignment: CENTER;
+}
+
+.button {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #42a5f5, #1e88e5);
+    -fx-text-fill: green;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 8 16;
+}
+
+.button:hover {
+    -fx-background-color: #1565c0;
+}
+
+.text-field, .date-picker {
+    -fx-background-radius: 8;
+    -fx-border-color: #64b5f6;
+    -fx-border-radius: 8;
+    -fx-padding: 6;
+    -fx-background-color: pink;
+}
+
+.hbox {
+    -fx-padding: 10 0 10 0;
+}

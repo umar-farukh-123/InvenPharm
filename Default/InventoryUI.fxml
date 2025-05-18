@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controller.InventoryController"
+      spacing="20"
+      style="-fx-background-color: linear-gradient(to right, #f0f4f8, #d9e2ec); -fx-padding: 30; -fx-font-family: 'Segoe UI';">
+
+    <!-- Title -->
+    <Label text="💊 InvenPharm - Inventory Manager"
+           alignment="CENTER"
+           style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-effect: dropshadow(one-pass-box, #bbb, 4, 0.3, 0, 2);"/>
+
+    <!-- Wiki Search Bar -->
+    
+	<HBox spacing="10" alignment="CENTER">
+    <TextField fx:id="wikiSearchField" promptText="Enter medicine name for info"
+               prefWidth="300" maxWidth="300"
+               style="-fx-background-radius: 10; -fx-padding: 8 12;"/>
+    <Button text="🔊 Speak Info" onAction="#handleWikiSearch"
+            prefWidth="110" maxWidth="110"
+            style="-fx-background-color: linear-gradient(to right, #6a11cb, #2575fc); -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 8 18;"/>
+    <Button text="🔇 Stop Voice" onAction="#handleStopVoice"
+            prefWidth="110" maxWidth="110"
+            style="-fx-background-color: linear-gradient(to right, #bdc3c7, #2c3e50); -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 8 18;"/>
+</HBox>
+
+    <!-- TableView (Resizable) -->
+    <VBox VBox.vgrow="ALWAYS">
+       <TableView fx:id="tableView"
+           style="-fx-background-radius: 10; 
+                  -fx-border-color: #28a745; 
+                  -fx-border-radius: 10; 
+                  -fx-border-width: 3; 
+                  -fx-effect: dropshadow(three-pass-box, rgba(40, 167, 69, 0.6), 10, 0.1, 0, 0);">
+
+            <columns>
+                <TableColumn fx:id="colName" text="💊 Name" prefWidth="150"/>
+                <TableColumn fx:id="colCategory" text="📦 Category" prefWidth="130"/>
+                <TableColumn fx:id="colPrice" text="💰 Price (₹)" prefWidth="100"/>
+                <TableColumn fx:id="colQty" text="🔢 Quantity" prefWidth="100"/>
+                <TableColumn fx:id="colExpiry" text="⏰ Expiry Date" prefWidth="150"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- Search Bar -->
+    <HBox spacing="10" alignment="CENTER">
+        <TextField fx:id="searchField" promptText="Search by Name or Category"
+                   style="-fx-pref-width: 300; -fx-background-radius: 10; -fx-padding: 8 12;"/>
+        <Button text="🔍 Search" onAction="#handleSearch"
+                style="-fx-background-color: linear-gradient(to right, #4facfe, #00f2fe); -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 8 18;"/>
+        <Button text="❌ Clear" onAction="#handleClearSearch"
+                style="-fx-background-color: linear-gradient(to right, #ff4b2b, #ff416c); -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 8 18;"/>
+    </HBox>
+
+    <!-- Selected Medicine Section -->
+    <Label text="📝 Selected Medicine Details"
+           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #34495e;"/>
+
+    <!-- Form Fields -->
+    <GridPane hgap="15" vgap="15" alignment="CENTER">
+        <Label text="Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="nameField" GridPane.rowIndex="0" GridPane.columnIndex="1" style="-fx-background-radius: 8;"/>
+
+        <Label text="Category:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="categoryField" GridPane.rowIndex="1" GridPane.columnIndex="1" style="-fx-background-radius: 8;"/>
+
+        <Label text="Price:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="priceField" GridPane.rowIndex="2" GridPane.columnIndex="1" style="-fx-background-radius: 8;"/>
+
+        <Label text="Quantity:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="qtyField" GridPane.rowIndex="3" GridPane.columnIndex="1" style="-fx-background-radius: 8;"/>
+
+        <Label text="Expiry Date:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="expiryPicker" GridPane.rowIndex="4" GridPane.columnIndex="1" style="-fx-background-radius: 8;"/>
+    </GridPane>
+
+    <!-- Action Buttons -->
+    <HBox spacing="20" alignment="CENTER">
+        <Button text="✔ Update" onAction="#handleUpdate"
+                style="-fx-background-color: linear-gradient(to right, #43e97b, #38f9d7); -fx-text-fill: #ffffff; -fx-background-radius: 15; -fx-padding: 8 22;"/>
+
+        <Button text="🗑 Delete" onAction="#handleDelete"
+                style="-fx-background-color: linear-gradient(to right, #ee0979, #ff6a00); -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 8 22;"/>
+
+        <Button text="⏳ Expiry Check" onAction="#handleExpiryAlert"
+                style="-fx-background-color: linear-gradient(to right, #f7971e, #ffd200); -fx-text-fill: #333; -fx-background-radius: 15; -fx-padding: 8 22;"/>
+    </HBox>
+
+</VBox>

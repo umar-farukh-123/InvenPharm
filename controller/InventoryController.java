@@ -1,217 +1,288 @@
 package controller;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.time.LocalDate;
-import java.util.Scanner;
-import com.sun.speech.freetts.Voice;
-import com.sun.speech.freetts.VoiceManager;
-import org.json.JSONObject;
-import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import model.Medicine;
-import service.ExcelService;
+import util.MedicinesDAO;
+import util.TextToSpeech;
+import util.WikiFetcher;
+import java.time.LocalDate;
+import java.util.List;
 
-
-public class InventoryController {
-
-    @FXML private TextField wikiSearchField, searchField, nameField, categoryField, priceField, qtyField;
-    @FXML private TextArea wikiInfoArea;
+public class InventoryController 
+{
     @FXML private TableView<Medicine> tableView;
-    @FXML private TableColumn<Medicine, String> colName, colCategory;
+    @FXML private TableColumn<Medicine, String> colName;
+    @FXML private TableColumn<Medicine, String> colCategory;
     @FXML private TableColumn<Medicine, Double> colPrice;
     @FXML private TableColumn<Medicine, Integer> colQty;
     @FXML private TableColumn<Medicine, LocalDate> colExpiry;
+    
+    
+    @FXML private TextField nameField;
+    @FXML private TextField categoryField;
+    @FXML private TextField priceField;
+    @FXML private TextField qtyField;
     @FXML private DatePicker expiryPicker;
+    @FXML private TextField searchField;
+    @FXML private TextField wikiSearchField;
 
-    private ObservableList<Medicine> inventory;
-    private Voice voice;
+    private ObservableList<Medicine> medicineList;
+    private final TextToSpeech tts = new TextToSpeech();
 
-    public void initialize() {
-        System.setProperty("freetts.voices", "com.sun.speech.freetts.en.us.cmu_us_kal.KevinVoiceDirectory");
-        VoiceManager vm = VoiceManager.getInstance();
-        voice = vm.getVoice("kevin16");
-        if (voice != null) voice.allocate();
-
-        setupTable();
+    
+    
+    
+    
+    @FXML
+    public void initialize() 
+    {
+        colName.setCellValueFactory(cell->new javafx.beans.property.SimpleStringProperty(cell.getValue().getName()));
+        colCategory.setCellValueFactory(cell->new javafx.beans.property.SimpleStringProperty(cell.getValue().getCategory()));
+        colPrice.setCellValueFactory(cell->new javafx.beans.property.SimpleObjectProperty<>(cell.getValue().getPrice()));
+        colQty.setCellValueFactory(cell->new javafx.beans.property.SimpleObjectProperty<>(cell.getValue().getQuantity()));
+        colExpiry.setCellValueFactory(cell->new javafx.beans.property.SimpleObjectProperty<>(cell.getValue().getExpiryDate()));
+        loadMedicines();
+        tableView.setOnMouseClicked(this::handleRowClick);
     }
 
-    private void speak(String message) {
-        if (voice != null && message != null && !message.isEmpty()) {
-            new Thread(() -> voice.speak(message)).start();
+    
+    
+    
+    
+    
+    private void loadMedicines() 
+    {
+        List<Medicine> medicines=MedicinesDAO.getAllMedicines();
+        medicineList=FXCollections.observableArrayList(medicines);
+        tableView.setItems(medicineList);
+    }
+
+    
+    
+    
+    
+    private void clearForm() 
+    {
+        nameField.clear();
+        categoryField.clear();
+        priceField.clear();
+        qtyField.clear();
+        expiryPicker.setValue(null);
+        tableView.getSelectionModel().clearSelection();
+    }
+
+     
+    
+    
+    private Medicine getMedicineFromForm() 
+    {
+        try 
+        {
+            String name=nameField.getText();
+            String category=categoryField.getText();
+            String priceText=priceField.getText();
+            String qtyText=qtyField.getText();
+            LocalDate expiry=expiryPicker.getValue();
+
+            if(name==null||name.isEmpty()||category==null || category.isEmpty() ||
+                priceText==null|| priceText.isEmpty() ||
+          qtyText==null ||qtyText.isEmpty() ||
+                expiry==null) 
+            {
+                return null;
+            }
+
+            
+            double price=Double.parseDouble(priceText);
+            int qty=Integer.parseInt(qtyText);
+            
+            
+            return new Medicine(name, category, price, qty, expiry);
+        } 
+        catch(Exception e) 
+        {
+            showAlert("Invalid input. Please check all fields.",Alert.AlertType.ERROR);
+            
+            return null;
         }
     }
 
-    private void setupTable() {
-        inventory = FXCollections.observableArrayList(ExcelService.loadInventory());
-        tableView.setItems(inventory);
-
-        colName.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getName()));
-        colCategory.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getCategory()));
-        colPrice.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getPrice()));
-        colQty.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getQuantity()));
-        colExpiry.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getExpiryDate()));
-
-        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                nameField.setText(newVal.getName());
-                categoryField.setText(newVal.getCategory());
-                priceField.setText(String.valueOf(newVal.getPrice()));
-                qtyField.setText(String.valueOf(newVal.getQuantity()));
-                expiryPicker.setValue(newVal.getExpiryDate());
-            }
-        });
-    }
-
+    
+    
+    
+    
     @FXML
-    private void handleWikiSearch() {
-        String medicine = wikiSearchField.getText().trim();
-        if (medicine.isEmpty()) {
-            wikiInfoArea.setText("Please enter a medicine name.");
-            return;
+    private void handleUpdate() 
+    {
+        Medicine med=getMedicineFromForm();
+        if(med==null) 
+        	return;
+        
+        boolean exists=MedicinesDAO.getMedicineByName(med.getName())!=null;
+        if(exists) 
+        {
+            MedicinesDAO.updateMedicine(med);
+            showAlert("Medicine updated successfully.",Alert.AlertType.INFORMATION);
+        } 
+        else 
+        {
+            MedicinesDAO.insertMedicine(med);
+            showAlert("Medicine added successfully.",Alert.AlertType.INFORMATION);
         }
-
-        new Thread(() -> {
-            try {
-                String summary = fetchWikipediaSummary(medicine);
-                if (summary == null || summary.isEmpty()) {
-                    summary = "No information found on Wikipedia.";
-                }
-
-                String finalSummary = summary;
-                Platform.runLater(() -> wikiInfoArea.setText(finalSummary));
-                speak(finalSummary);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Platform.runLater(() -> wikiInfoArea.setText("Error fetching information: " + ex.getMessage()));
-            }
-        }).start();
+        loadMedicines();
+        clearForm();
     }
 
-
-    private String fetchWikipediaSummary(String query) throws Exception {
-        String encoded = URLEncoder.encode(query, "UTF-8");
-        String urlStr = "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&format=json&titles=" + encoded;
-
-        HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty("User-Agent", "InvenPharmApp/1.0");
-
-        Scanner sc = new Scanner(conn.getInputStream());
-        StringBuilder jsonText = new StringBuilder();
-        while (sc.hasNext()) jsonText.append(sc.nextLine());
-        sc.close();
-
-        JSONObject pages = new JSONObject(jsonText.toString()).getJSONObject("query").getJSONObject("pages");
-        for (String key : pages.keySet()) {
-            JSONObject page = pages.getJSONObject(key);
-            if (page.has("extract")) {
-                return page.getString("extract");
-            }
+    
+     
+    
+    
+    @FXML
+    private void handleDelete() 
+    {
+        Medicine selected=tableView.getSelectionModel().getSelectedItem();
+        if(selected!=null) 
+        {
+            MedicinesDAO.deleteMedicine(selected.getName());
+            showAlert("Medicine deleted.",Alert.AlertType.INFORMATION);
+            loadMedicines();
+            clearForm();
+        } 
+        else 
+        {
+            showAlert("No medicine selected.",Alert.AlertType.WARNING);
         }
-        return null;
     }
 
+    
+    
+    
+    
+    
     @FXML
-    private void handleSearch() {
-        String query = searchField.getText().toLowerCase();
-        speak("Showing search results for " + query);
-
-        ObservableList<Medicine> filtered = inventory.filtered(med ->
-            med.getName().toLowerCase().contains(query) ||
-            med.getCategory().toLowerCase().contains(query)
-        );
-        tableView.setItems(filtered);
+    private void handleSearch() 
+    {
+        String keyword=searchField.getText().trim();
+        if(!keyword.isEmpty()) 
+        {
+            List<Medicine> results=MedicinesDAO.searchMedicines(keyword);
+            tableView.setItems(FXCollections.observableArrayList(results));
+        }
     }
 
+    
+    
+    
+    
     @FXML
-    private void handleClearSearch() {
+    private void handleClearSearch() 
+    {
         searchField.clear();
-        tableView.setItems(inventory);
-        speak("Search cleared. Showing full inventory.");
+        loadMedicines();
     }
 
+    
+    
+    
     @FXML
-    private void handleUpdate() {
-        Medicine selected = tableView.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No Selection", "Please select a row to update.");
-            return;
-        }
-
-        try {
-            selected.setName(nameField.getText());
-            selected.setCategory(categoryField.getText());
-            selected.setPrice(Double.parseDouble(priceField.getText()));
-            selected.setQuantity(Integer.parseInt(qtyField.getText()));
-            selected.setExpiryDate(expiryPicker.getValue());
-
-            tableView.refresh();
-            ExcelService.saveInventory(inventory);
-
-            showAlert("Update Success", "Medicine details updated.");
-        } catch (Exception e) {
-            showAlert("Invalid Input", "Please enter valid data.");
+    private void handleRowClick(MouseEvent event) 
+    {
+        Medicine selected=tableView.getSelectionModel().getSelectedItem();
+        if(selected!=null) 
+        {
+            nameField.setText(selected.getName());
+            categoryField.setText(selected.getCategory());
+            priceField.setText(String.valueOf(selected.getPrice()));
+            qtyField.setText(String.valueOf(selected.getQuantity()));
+            expiryPicker.setValue(selected.getExpiryDate());
         }
     }
 
+    
+    
     @FXML
-    private void handleDelete() {
-        Medicine selected = tableView.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No Selection", "Please select a row to delete.");
-            return;
-        }
+    private void handleExpiryAlert() 
+    {
+        StringBuilder alertText=new StringBuilder("Expired or soon expiring medicines:\n\n");
+        boolean found=false;
+        LocalDate now=LocalDate.now();
 
-        inventory.remove(selected);
-        tableView.refresh();
-        ExcelService.saveInventory(inventory);
-
-        showAlert("Delete Success", "Medicine deleted from inventory.");
-    }
-
-    @FXML
-    private void handleExpiryAlert() {
-        StringBuilder alertList = new StringBuilder();
-        LocalDate today = LocalDate.now();
-
-        for (Medicine med : inventory) {
-            LocalDate expiry = med.getExpiryDate();
-            if (expiry != null && expiry.isBefore(today.plusDays(30))) {
-                alertList.append(med.getName()).append(" (Expires on: ")
-                         .append(expiry).append(")\n");
+        for(Medicine m:medicineList) 
+        {
+            if(m.getExpiryDate().isBefore(now.plusDays(30))) 
+            {
+                alertText.append(m.getName()).append("(").append(m.getExpiryDate()).append(")\n");
+                found=true;
             }
         }
 
-        if (alertList.length() == 0) {
-            showAlert("All Good", "No medicines expiring within 30 days.");
-        } else {
-            showAlert("Expiry Alert", "Medicines expiring soon:\n" + alertList);
+        if(found) 
+        {
+            showAlert(alertText.toString(),Alert.AlertType.WARNING);
+            tts.speak(alertText.toString());  
+        } 
+        else 
+        {
+            String msg="No medicines nearing expiry.";
+            showAlert(msg,Alert.AlertType.INFORMATION);
+            tts.speak(msg);
         }
     }
 
+    
+    
+    private void showAlert(String msg,Alert.AlertType type) 
+    {
+        Alert alert=new Alert(type);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+    
+    
+    
     @FXML
-    private void handleStopVoice() {
-        if (voice != null && voice.getAudioPlayer() != null) {
-            voice.getAudioPlayer().cancel(); // Stop ongoing audio
+    private void handleWikiSearch() 
+    {
+        String query=wikiSearchField.getText().trim();
+        if(query.isEmpty()) 
+        {
+            Medicine selected=tableView.getSelectionModel().getSelectedItem();
+            if(selected!=null) 
+            {
+                query=selected.getName();
+                String info="Medicine "+selected.getName() +
+                        ", Category "+selected.getCategory() +
+                        ", Price "+selected.getPrice() +
+                        ", Quantity "+selected.getQuantity() +
+                        ", Expiry "+selected.getExpiryDate();
+                tts.speak(info);
+                return;
+            } 
+            else 
+            {
+                showAlert("Please select a medicine or type a search term.", Alert.AlertType.WARNING);
+                return;
+            }
         }
+        
+        // Wiki summary fetch
+        String summary=WikiFetcher.fetchSummary(query);
+        showAlert(summary,Alert.AlertType.INFORMATION);
+        tts.speak(summary);
     }
 
-    private void showAlert(String title, String message) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle(title);
-            alert.setHeaderText(null);
-            alert.setContentText(message);
-            alert.showAndWait();
-        });
-
-        speak(message);
+    
+    
+    
+    
+    @FXML
+    private void handleStopVoice() 
+    {
+        tts.stop();
     }
 }

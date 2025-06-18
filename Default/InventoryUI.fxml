@@ -10,10 +10,16 @@
       spacing="20"
       style="-fx-background-color: linear-gradient(to right, #f0f4f8, #d9e2ec); -fx-padding: 30; -fx-font-family: 'Segoe UI';">
 
+
+
     <!-- Title -->
     <Label text="💊 InvenPharm - Inventory Manager"
+
            alignment="CENTER"
            style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-effect: dropshadow(one-pass-box, #bbb, 4, 0.3, 0, 2);"/>
+
+
+
 
     <!-- Wiki Search Bar -->
     
@@ -28,6 +34,8 @@
             prefWidth="110" maxWidth="110"
             style="-fx-background-color: linear-gradient(to right, #bdc3c7, #2c3e50); -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 8 18;"/>
 </HBox>
+
+
 
     <!-- TableView (Resizable) -->
     <VBox VBox.vgrow="ALWAYS">
@@ -48,6 +56,10 @@
         </TableView>
     </VBox>
 
+
+
+
+
     <!-- Search Bar -->
     <HBox spacing="10" alignment="CENTER">
         <TextField fx:id="searchField" promptText="Search by Name or Category"
@@ -58,9 +70,14 @@
                 style="-fx-background-color: linear-gradient(to right, #ff4b2b, #ff416c); -fx-text-fill: white; -fx-background-radius: 15; -fx-padding: 8 18;"/>
     </HBox>
 
+
+
+
     <!-- Selected Medicine Section -->
     <Label text="📝 Selected Medicine Details"
            style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #34495e;"/>
+
+
 
     <!-- Form Fields -->
     <GridPane hgap="15" vgap="15" alignment="CENTER">
@@ -80,6 +97,9 @@
         <DatePicker fx:id="expiryPicker" GridPane.rowIndex="4" GridPane.columnIndex="1" style="-fx-background-radius: 8;"/>
     </GridPane>
 
+
+
+
     <!-- Action Buttons -->
     <HBox spacing="20" alignment="CENTER">
         <Button text="✔ Update" onAction="#handleUpdate"
@@ -93,3 +113,7 @@
     </HBox>
 
 </VBox>
+
+
+
+
